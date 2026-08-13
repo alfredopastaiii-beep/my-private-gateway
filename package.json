@@ -1,13 +1,13 @@
 {
   "name": "private-proxy",
   "version": "1.0.0",
-  "description": "Custom modern proxy server",
+  "description": "Advanced proxy server",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
     "express": "^4.19.2",
-    "http-proxy": "^1.18.1"
+    "corrosion": "^1.1.0"
   }
 }

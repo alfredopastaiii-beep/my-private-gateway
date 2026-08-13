@@ -1,15 +1,15 @@
 const express = require('express');
-const httpProxy = require('http-proxy');
+const Corrosion = require('corrosion');
 const app = express();
-const proxy = httpProxy.createProxyServer({ changeOrigin: true, followRedirects: true });
 
-// Error handling to prevent crashes
-proxy.on('error', (err, req, res) => {
-  res.writeHead(500, { 'Content-Type': 'text/plain' });
-  res.end('The website could not be loaded via proxy. It may have heavy anti-bot security.');
+// Initialize the advanced layout rewriter engine
+const proxy = new Corrosion({
+    prefix: '/service/',
+    codec: 'xhtml', // Safe encoding for styles and text layouts
+    forceURL: true
 });
 
-// Home page with a clean UI search box
+// Home search dashboard UI
 app.get('/', (req, res) => {
   res.send(`
     <style>
@@ -20,8 +20,8 @@ app.get('/', (req, res) => {
       button:hover { background: #0056b3; }
     </style>
     <div class="box">
-      <h2>Private Gateway</h2>
-      <p>Enter a URL below to browse securely:</p>
+      <h2>Advanced Gateway</h2>
+      <p>Enter a URL below to browse with full formatting:</p>
       <input type="text" id="url" placeholder="https://coproxy.io" value="https://coproxy.io">
       <button onclick="go()">Go</button>
     </div>
@@ -29,23 +29,23 @@ app.get('/', (req, res) => {
       function go() {
         let target = document.getElementById('url').value;
         if(!target.startsWith('http')) target = 'https://' + target;
-        window.location.href = '/service/' + target;
+        // Correct path syntax for the advanced layout engine
+        window.location.href = '/service/' + proxy.codec.encode(target);
       }
+      // Quick fallback encoder logic for front-end safety
+      const proxy = { codec: { encode: (str) => btoa(str).replace(/\\//g, '_').replace(/\\+/g, '-') } };
     </script>
   `);
 });
 
-// The proxy engine router
-app.all('/service/:url*', (req, res) => {
-  let targetUrl = req.params.url + req.params[0];
-  
-  // Clean up potential missing protocol syntax
-  if (!targetUrl.startsWith('http')) {
-    targetUrl = 'https://' + targetUrl;
-  }
-  
-  proxy.web(req, res, { target: targetUrl });
+// Route network requests through the rewriter proxy engine
+app.use((req, res) => {
+    if (req.url.startsWith('/service/')) {
+        proxy.request(req, res);
+    } else {
+        res.status(404).send('Not Found');
+    }
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT);
+app.listen(PORT, () => console.log('Proxy running smoothly'));
